@@ -5,6 +5,8 @@ import authRoutes from './routes/auth.routes.js'
 import tasksRoutes from './routes/tasks.routes.js'
 import { connectDB } from './utils/db.js'
 import { errorMiddleware } from './middleware/error.middleware.js'
+import { rateLimit } from './middleware/rate.middleware.js'
+import { logger } from './middleware/logger.middleware.js'
 
 dotenv.config()
 
@@ -12,6 +14,8 @@ const app = express()
 
 app.use(cors())
 app.use(express.json())
+app.use(logger)
+app.use(rateLimit)
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK' })

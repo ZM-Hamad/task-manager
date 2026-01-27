@@ -10,4 +10,7 @@ const taskSchema = new mongoose.Schema(
   { timestamps: true }
 )
 
+taskSchema.index({ ownerId: 1, createdAt: -1 })
+taskSchema.index({ ownerId: 1, status: 1, createdAt: -1 })
+
 export default mongoose.model('Task', taskSchema)
