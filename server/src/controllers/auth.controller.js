@@ -46,3 +46,13 @@ export const login = async (req, res, next) => {
     next(e)
   }
 }
+
+export const me = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user.userId).select('_id email createdAt updatedAt')
+    if (!user) return res.status(404).json({ message: 'User not found' })
+    res.json({ id: user._id, email: user.email, createdAt: user.createdAt, updatedAt: user.updatedAt })
+  } catch (e) {
+    next(e)
+  }
+}
