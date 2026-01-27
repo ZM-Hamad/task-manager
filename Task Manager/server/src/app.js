@@ -4,6 +4,7 @@ import dotenv from 'dotenv'
 import authRoutes from './routes/auth.routes.js'
 import tasksRoutes from './routes/tasks.routes.js'
 import { connectDB } from './utils/db.js'
+import { errorMiddleware } from './middleware/error.middleware.js'
 
 dotenv.config()
 
@@ -18,6 +19,8 @@ app.get('/api/health', (req, res) => {
 
 app.use('/api/auth', authRoutes)
 app.use('/api/tasks', tasksRoutes)
+
+app.use(errorMiddleware)
 
 const PORT = process.env.PORT || 5000
 

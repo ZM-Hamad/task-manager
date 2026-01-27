@@ -1,21 +1,19 @@
 import { Router } from 'express'
+import {
+  getTasks,
+  createTask,
+  updateTask,
+  deleteTask
+} from '../controllers/tasks.controller.js'
+import { authMiddleware } from '../middleware/auth.middleware.js'
 
 const router = Router()
 
-router.get('/', (req, res) => {
-  res.json([])
-})
+router.use(authMiddleware)
 
-router.post('/', (req, res) => {
-  res.json({})
-})
-
-router.patch('/:id', (req, res) => {
-  res.json({})
-})
-
-router.delete('/:id', (req, res) => {
-  res.json({})
-})
+router.get('/', getTasks)
+router.post('/', createTask)
+router.patch('/:id', updateTask)
+router.delete('/:id', deleteTask)
 
 export default router
