@@ -20,6 +20,10 @@ app.get('/api/health', (req, res) => {
 app.use('/api/auth', authRoutes)
 app.use('/api/tasks', tasksRoutes)
 
+app.use((req, res) => {
+  res.status(404).json({ message: 'Not found' })
+})
+
 app.use(errorMiddleware)
 
 const PORT = process.env.PORT || 5000
