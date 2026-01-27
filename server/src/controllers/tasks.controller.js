@@ -1,4 +1,5 @@
 import Task from '../models/Task.js'
+import { validateCreateTask, validateUpdateTask } from '../utils/validate.js'
 
 export const getTasks = async (req, res, next) => {
   try {
@@ -11,6 +12,9 @@ export const getTasks = async (req, res, next) => {
 
 export const createTask = async (req, res, next) => {
   try {
+    const v = validateCreateTask(req.body)
+    if (!v.ok) return res.status(400).json({ message: 'Validation error', errors: v.errors })
+
     const task = await Task.create({
       ownerId: req.user.userId,
       title: req.body.title,
@@ -24,9 +28,17 @@ export const createTask = async (req, res, next) => {
 
 export const updateTask = async (req, res, next) => {
   try {
+    const v = validateUpdateTask(req.body)
+    if (!v.ok) return res.status(400).json({ message: 'Validation error', errors: v.errors })
+
+    const allowed = {}
+    if (req.body.title !== undefined) allowed.title = req.body.title
+    if (req.body.description !== undefined) allowed.description = req.body.description
+    if (req.body.status !== undefined) allowed.status = req.body.status
+
     const task = await Task.findOneAndUpdate(
       { _id: req.params.id, ownerId: req.user.userId },
-      req.body,
+      allowed,
       { new: true }
     )
     if (!task) return res.status(404).json({ message: 'Task not found' })

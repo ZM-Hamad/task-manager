@@ -1,15 +1,20 @@
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import User from '../models/User.js'
+import { validateRegister, validateLogin, normalizeEmail } from '../utils/validate.js'
 
 export const register = async (req, res, next) => {
   try {
     const { email, password } = req.body
-    const exists = await User.findOne({ email })
+    const v = validateRegister({ email, password })
+    if (!v.ok) return res.status(400).json({ message: 'Validation error', errors: v.errors })
+
+    const cleanEmail = normalizeEmail(email)
+    const exists = await User.findOne({ email: cleanEmail })
     if (exists) return res.status(400).json({ message: 'Email already exists' })
 
     const passwordHash = await bcrypt.hash(password, 10)
-    const user = await User.create({ email, passwordHash })
+    const user = await User.create({ email: cleanEmail, passwordHash })
 
     res.status(201).json({ id: user._id, email: user.email })
   } catch (e) {
@@ -20,7 +25,11 @@ export const register = async (req, res, next) => {
 export const login = async (req, res, next) => {
   try {
     const { email, password } = req.body
-    const user = await User.findOne({ email })
+    const v = validateLogin({ email, password })
+    if (!v.ok) return res.status(400).json({ message: 'Validation error', errors: v.errors })
+
+    const cleanEmail = normalizeEmail(email)
+    const user = await User.findOne({ email: cleanEmail })
     if (!user) return res.status(400).json({ message: 'Invalid credentials' })
 
     const ok = await bcrypt.compare(password, user.passwordHash)
