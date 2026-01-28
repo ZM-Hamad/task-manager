@@ -1,5 +1,12 @@
 # Tasks App
 
+## Features
+- Register / Login
+- Protected routes
+- Tasks CRUD (Create, Read, Update, Delete)
+- Pagination
+- Auto logout on unauthorized
+
 ## Tech Stack
 - React + TypeScript
 - React Router
@@ -7,15 +14,8 @@
 - MongoDB
 - JWT Authentication
 
-## Features
-- Register / Login
-- Protected routes
-- Tasks CRUD (Create, Read, Update, Delete)
-- Pagination
-- Auth-based navigation
-- Auto logout on unauthorized
-
 ## How to Run
+
 ### Backend
 cd server
 npm install
