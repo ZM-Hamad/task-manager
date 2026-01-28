@@ -26,17 +26,19 @@ export const validateLogin = ({ email, password }) => {
   return { ok: Object.keys(errors).length === 0, errors }
 }
 
-export const validateCreateTask = ({ title, description }) => {
+export const validateCreateTask = ({ title, description, category }) => {
   const errors = {}
   if (!isNonEmptyString(title, 1, 120)) errors.title = 'Title is required'
   if (description != null && typeof description !== 'string') errors.description = 'Description must be a string'
+  if (category != null && !isNonEmptyString(category, 1, 120)) errors.category = 'Category is required'
   return { ok: Object.keys(errors).length === 0, errors }
 }
 
-export const validateUpdateTask = ({ title, description, status }) => {
+export const validateUpdateTask = ({ title, description, status, category }) => {
   const errors = {}
   if (title !== undefined && !isNonEmptyString(title, 1, 120)) errors.title = 'Invalid title'
   if (description !== undefined && typeof description !== 'string') errors.description = 'Description must be a string'
   if (status !== undefined && !['active', 'done'].includes(status)) errors.status = 'Invalid status'
+  if (category !== undefined && !isNonEmptyString(category, 1, 120)) errors.category = 'Invalid category'
   return { ok: Object.keys(errors).length === 0, errors }
 }

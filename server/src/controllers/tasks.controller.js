@@ -13,6 +13,8 @@ export const getTasks = async (req, res, next) => {
     const ownerId = req.user.userId
 
     const status = req.query.status
+    const category = req.query.category
+
     const sort = String(req.query.sort || 'desc').toLowerCase()
     const page = clamp(parseIntSafe(req.query.page, 1), 1, 1000000)
     const limit = clamp(parseIntSafe(req.query.limit, 20), 1, 100)
@@ -25,6 +27,12 @@ export const getTasks = async (req, res, next) => {
       }
       filter.status = s
     }
+    if (category !== undefined) {
+      const c = String(category).trim()
+      if (!c) return res.status(400).json({ message: 'Validation error', errors: { category: 'Invalid category' } })
+      filter.category = c
+    }
+
 
     const sortDir = sort === 'asc' ? 1 : -1
 
@@ -50,8 +58,10 @@ export const createTask = async (req, res, next) => {
     const task = await Task.create({
       ownerId: req.user.userId,
       title: req.body.title,
-      description: req.body.description || ''
+      description: req.body.description || '',
+      category: req.body.category || 'General'
     })
+
 
     res.status(201).json(task)
   } catch (e) {
@@ -68,6 +78,7 @@ export const updateTask = async (req, res, next) => {
     if (req.body.title !== undefined) allowed.title = req.body.title
     if (req.body.description !== undefined) allowed.description = req.body.description
     if (req.body.status !== undefined) allowed.status = req.body.status
+  if (req.body.category !== undefined) allowed.category = req.body.category
 
     const task = await Task.findOneAndUpdate(
       { _id: req.params.id, ownerId: req.user.userId },
