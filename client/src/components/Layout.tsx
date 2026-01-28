@@ -2,7 +2,6 @@ import { Link, Outlet, useNavigate } from "react-router-dom";
 
 export default function Layout() {
   const navigate = useNavigate();
-  const token = localStorage.getItem("token");
 
   function logout() {
     localStorage.removeItem("token");
@@ -15,8 +14,7 @@ export default function Layout() {
         <Link to="/login">Login</Link>
         <Link to="/register">Register</Link>
         <Link to="/tasks">Tasks</Link>
-
-        {token && <button onClick={logout}>Logout</button>}
+        <button onClick={logout}>Logout</button>
       </nav>
 
       <Outlet />

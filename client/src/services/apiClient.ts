@@ -10,11 +10,7 @@ async function parseError(res: Response) {
 }
 
 // ---------- POST ----------
-export async function apiPost<T>(
-  path: string,
-  body: unknown,
-  token?: string
-): Promise<T> {
+export async function apiPost<T>(path: string, body: unknown, token?: string): Promise<T> {
   const res = await fetch(`${API_URL}${path}`, {
     method: "POST",
     headers: {
@@ -29,10 +25,7 @@ export async function apiPost<T>(
 }
 
 // ---------- GET ----------
-export async function apiGet<T>(
-  path: string,
-  token?: string
-): Promise<T> {
+export async function apiGet<T>(path: string, token?: string): Promise<T> {
   const res = await fetch(`${API_URL}${path}`, {
     method: "GET",
     headers: {
@@ -44,22 +37,7 @@ export async function apiGet<T>(
   return res.json() as Promise<T>;
 }
 
-// ---------- DELETE ----------
-export async function apiDelete(
-  path: string,
-  token?: string
-): Promise<void> {
-  const res = await fetch(`${API_URL}${path}`, {
-    method: "DELETE",
-    headers: {
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-  });
-
-  if (!res.ok) throw new Error(await parseError(res));
-}
-
-
+// ---------- PATCH ----------
 export async function apiPatch<T>(path: string, body: unknown, token?: string): Promise<T> {
   const res = await fetch(`${API_URL}${path}`, {
     method: "PATCH",
@@ -74,5 +52,14 @@ export async function apiPatch<T>(path: string, body: unknown, token?: string): 
   return res.json() as Promise<T>;
 }
 
+// ---------- DELETE ----------
+export async function apiDelete(path: string, token?: string): Promise<void> {
+  const res = await fetch(`${API_URL}${path}`, {
+    method: "DELETE",
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
 
-
+  if (!res.ok) throw new Error(await parseError(res));
+}
