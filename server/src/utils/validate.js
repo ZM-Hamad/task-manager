@@ -11,8 +11,9 @@ export const isNonEmptyString = (v, min = 1, max = 200) => {
 
 export const normalizeEmail = (v) => String(v || '').trim().toLowerCase()
 
-export const validateRegister = ({ email, password }) => {
+export const validateRegister = ({ name, email, password }) => {
   const errors = {}
+  if (!isNonEmptyString(name, 1, 120)) errors.name = 'Name is required'
   if (!isEmail(email)) errors.email = 'Invalid email'
   if (!isNonEmptyString(password, 6, 200)) errors.password = 'Password must be at least 6 characters'
   return { ok: Object.keys(errors).length === 0, errors }

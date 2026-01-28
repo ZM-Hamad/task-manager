@@ -20,6 +20,9 @@ export async function apiPost<T>(path: string, body: unknown, token?: string): P
     body: JSON.stringify(body),
   });
 
+  const text = await res.clone().text()
+  if (!res.ok) throw new Error(text || (await parseError(res)))
+
   if (!res.ok) throw new Error(await parseError(res));
   return res.json() as Promise<T>;
 }

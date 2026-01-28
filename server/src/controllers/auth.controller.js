@@ -5,8 +5,8 @@ import { validateRegister, validateLogin, normalizeEmail } from '../utils/valida
 
 export const register = async (req, res, next) => {
   try {
-    const { email, password } = req.body
-    const v = validateRegister({ email, password })
+    const { name, email, password } = req.body
+    const v = validateRegister({ name, email, password })
     if (!v.ok) return res.status(400).json({ message: 'Validation error', errors: v.errors })
 
     const cleanEmail = normalizeEmail(email)
@@ -14,9 +14,9 @@ export const register = async (req, res, next) => {
     if (exists) return res.status(400).json({ message: 'Email already exists' })
 
     const passwordHash = await bcrypt.hash(password, 10)
-    const user = await User.create({ email: cleanEmail, passwordHash })
+    const user = await User.create({ name, email: cleanEmail, passwordHash })
 
-    res.status(201).json({ id: user._id, email: user.email })
+    res.status(201).json({ id: user._id, name: user.name, email: user.email })
   } catch (e) {
     next(e)
   }
