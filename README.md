@@ -6,6 +6,7 @@
 - Tasks CRUD (Create, Read, Update, Delete)
 - Pagination
 - Auto logout on unauthorized
+- Auth-based navigation
 
 ## Tech Stack
 - React + TypeScript
