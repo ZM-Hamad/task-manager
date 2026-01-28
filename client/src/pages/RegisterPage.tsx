@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiPost } from "../services/apiClient";
+import "./auth.css";
 
 type RegisterResponse = { id: string; email: string };
 
@@ -26,25 +27,53 @@ export default function RegisterPage() {
     }
   }
 
-  return (
-    <div>
-      <h1>Register</h1>
+return (
+  <div className="auth-shell">
+    <div className="auth-card">
+      <h1 className="auth-title">Register</h1>
+      <p className="auth-subtitle">Create an account to start managing tasks</p>
 
-      <form onSubmit={onSubmit} style={{ display: "grid", gap: 8, maxWidth: 320 }}>
-        <input placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
-        <input
-          placeholder="Password"
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
+      <form onSubmit={onSubmit} className="auth-form">
+        <div className="auth-field">
+          <label className="auth-label" htmlFor="email">Email</label>
+          <input
+            id="email"
+            className="auth-input"
+            type="email"
+            placeholder="you@example.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            disabled={loading}
+            autoComplete="email"
+          />
+        </div>
 
-        {error && <p style={{ color: "red" }}>{error}</p>}
+        <div className="auth-field">
+          <label className="auth-label" htmlFor="password">Password</label>
+          <input
+            id="password"
+            className="auth-input"
+            type="password"
+            placeholder="Create a password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            disabled={loading}
+            autoComplete="new-password"
+          />
+        </div>
 
-        <button type="submit" disabled={loading}>
+        {error && <p className="auth-error">{error}</p>}
+
+        <button className="auth-btn" type="submit" disabled={loading}>
           {loading ? "Creating..." : "Create account"}
         </button>
       </form>
+
+      <div className="auth-footer">
+        Already have an account? <a href="/login">Login</a>
+      </div>
     </div>
-  );
+  </div>
+);
+
 }
