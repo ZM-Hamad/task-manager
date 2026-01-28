@@ -1,24 +1,29 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { apiPost } from "../services/apiClient";
+
+type RegisterResponse = { id: string; email: string };
 
 export default function RegisterPage() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  function onSubmit(e: React.FormEvent) {
+  async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
 
-    if (!email || !password) {
-      setError("Email and password are required");
-      return;
+    try {
+      setLoading(true);
+      await apiPost<RegisterResponse>("/api/auth/register", { email, password });
+      navigate("/login");
+    } catch (err: any) {
+      setError(err?.message || "Register failed");
+    } finally {
+      setLoading(false);
     }
-
-    // TEMP: fake register until backend is connected
-    localStorage.setItem("token", "test123");
-    navigate("/tasks");
   }
 
   return (
@@ -26,11 +31,7 @@ export default function RegisterPage() {
       <h1>Register</h1>
 
       <form onSubmit={onSubmit} style={{ display: "grid", gap: 8, maxWidth: 320 }}>
-        <input
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
+        <input placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
         <input
           placeholder="Password"
           type="password"
@@ -40,7 +41,9 @@ export default function RegisterPage() {
 
         {error && <p style={{ color: "red" }}>{error}</p>}
 
-        <button type="submit">Create account</button>
+        <button type="submit" disabled={loading}>
+          {loading ? "Creating..." : "Create account"}
+        </button>
       </form>
     </div>
   );
