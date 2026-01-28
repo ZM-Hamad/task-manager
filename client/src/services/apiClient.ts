@@ -60,11 +60,7 @@ export async function apiDelete(
 }
 
 
-export async function apiPatch<T>(
-  path: string,
-  body: unknown,
-  token?: string
-): Promise<T> {
+export async function apiPatch<T>(path: string, body: unknown, token?: string): Promise<T> {
   const res = await fetch(`${API_URL}${path}`, {
     method: "PATCH",
     headers: {
@@ -77,3 +73,6 @@ export async function apiPatch<T>(
   if (!res.ok) throw new Error(await parseError(res));
   return res.json() as Promise<T>;
 }
+
+
+
