@@ -1,11 +1,13 @@
 import { Link, Outlet, useNavigate } from "react-router-dom";
+import { useLocalStorage } from "../hooks/useLocalStorage";
 
 export default function Layout() {
   const navigate = useNavigate();
-  const token = localStorage.getItem("token");
+  const tokenStorage = useLocalStorage<string>("token", "");
+  const token = tokenStorage.value;
 
   function logout() {
-    localStorage.removeItem("token");
+    tokenStorage.remove();
     navigate("/login");
   }
 
