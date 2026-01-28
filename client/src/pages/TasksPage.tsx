@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { apiGet, apiPost, apiDelete, apiPatch } from "../services/apiClient";
+import { useLocalStorage } from "../hooks/useLocalStorage";
+
 
 type Task = { _id: string; title: string; description?: string };
 
@@ -12,7 +14,8 @@ type TasksResponse = {
 };
 
 export default function TasksPage() {
-  const token = localStorage.getItem("token") ?? "";
+const tokenStorage = useLocalStorage<string>("token", "");
+const token = tokenStorage.value;
 
   const [items, setItems] = useState<Task[]>([]);
   const [title, setTitle] = useState("");
