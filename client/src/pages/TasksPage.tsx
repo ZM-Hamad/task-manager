@@ -7,7 +7,14 @@ import "./tasks.css"
 
 
 
-type Task = { _id: string; title: string; description?: string; category?: string; dueAt?: string | null };
+type Task = {
+  _id: string
+  title: string
+  description?: string
+  category?: string
+  dueAt?: string | null
+  status?: "active" | "done"
+}
 
 type TasksResponse = {
   items: Task[];
@@ -16,6 +23,12 @@ type TasksResponse = {
   total: number;
   pages: number;
 };
+
+type OpenMenu =
+  | { scope: "all"; id: string }
+  | { scope: "board"; cat: string; id: string }
+  | null
+
 
 export default function TasksPage() {
   const tokenStorage = useLocalStorage<string>("token", "");
@@ -33,9 +46,12 @@ export default function TasksPage() {
 
 
 
+  const [allOpen, setAllOpen] = useState(true)
 
 
-  const [menuOpenTaskId, setMenuOpenTaskId] = useState<string | null>(null)
+
+  const [openMenu, setOpenMenu] = useState<OpenMenu>(null)
+
   const [editOpenTask, setEditOpenTask] = useState<Task | null>(null)
   const [editTaskTitle, setEditTaskTitle] = useState("")
   const [editTaskDescription, setEditTaskDescription] = useState("")
@@ -128,6 +144,18 @@ export default function TasksPage() {
     return Number.isNaN(t) ? Number.POSITIVE_INFINITY : t
   }
 
+  function nearestDueForCat(all: Task[], cat: string) {
+    const active = all
+      .filter(t => getCat(t.category) === cat)
+      .filter(t => (t.status || "active") === "active")
+
+    if (active.length === 0) return Number.POSITIVE_INFINITY
+    return Math.min(...active.map(t => dueMs(t.dueAt)))
+  }
+
+
+
+
 
   function splitDue(dueAt?: string | null) {
     if (!dueAt) return { date: "", time: "" }
@@ -146,6 +174,14 @@ export default function TasksPage() {
     setSelectModeCats((prev) => ({ ...prev, [cat]: !prev[cat] }))
     setSelectedByCat((prev) => ({ ...prev, [cat]: {} }))
   }
+
+  function toggleSelectTask(cat: string, id: string) {
+    setSelectedByCat((prev) => ({
+      ...prev,
+      [cat]: { ...(prev[cat] || {}), [id]: !(prev[cat] || {})[id] }
+    }))
+  }
+
 
 
 
@@ -259,8 +295,9 @@ export default function TasksPage() {
 
 
   useEffect(() => {
-    load();
-  }, []);
+    if (token) load()
+  }, [token])
+
 
 
   useEffect(() => {
@@ -269,7 +306,8 @@ export default function TasksPage() {
       if (!t) return
       if (t.closest(".kebab")) return
       setMenuOpenCat(null)
-      setMenuOpenTaskId(null)
+      setOpenMenu(null)
+
 
     }
 
@@ -294,6 +332,29 @@ export default function TasksPage() {
       setLoading(false);
     }
   }
+
+
+
+
+
+
+
+  async function markDone(t: Task) {
+    if (!confirm("Mark this task as done?")) return
+    setError("")
+    try {
+      setLoading(true)
+      await apiPatch(`/api/tasks/${t._id}`, { status: "done" }, token)
+      await load()
+    } catch (err: any) {
+      if (handleMaybeUnauthorized(err)) return
+      setError(err?.message || "Failed to mark task as done")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+
 
 
 
@@ -342,7 +403,7 @@ export default function TasksPage() {
 
 
   function openEditTask(t: Task) {
-    setMenuOpenTaskId(null)
+    setOpenMenu(null)
     setEditOpenTask(t)
     setEditTaskTitle(t.title || "")
     setEditTaskDescription(t.description || "")
@@ -391,8 +452,14 @@ export default function TasksPage() {
   }
 
 
+
+
   const derivedCategories = Array.from(new Set(items.map((t) => getCat(t.category))))
-  const categories = Array.from(new Set(["General", ...derivedCategories, ...extraCategories]))
+  const categoriesRaw = Array.from(new Set(["General", ...derivedCategories, ...extraCategories]))
+
+  const categories = categoriesRaw
+    .slice()
+    .sort((a, b) => nearestDueForCat(items, a) - nearestDueForCat(items, b))
 
 
   return (
@@ -423,11 +490,101 @@ export default function TasksPage() {
             Add Category
           </button>
         </div>
+        <div className="all-tasks">
+          <div className="all-tasks-head">
+            <span>All tasks</span>
+
+            <button
+              type="button"
+              className="all-tasks-toggle"
+              onClick={() => setAllOpen((v) => !v)}
+              aria-label="Toggle all tasks"
+            >
+              <span className={`chev ${allOpen ? "open" : ""}`}>›</span>
+            </button>
+          </div>
+
+
+          {allOpen ? (
+            <ul className="all-tasks-list">
+              {items
+                .filter((t) => (t.status || "active") === "active")
+                .slice()
+                .sort((a, b) => dueMs(a.dueAt) - dueMs(b.dueAt))
+                .map((t) => (
+                  <li className="all-task-row" key={t._id}>
+                    <div className="all-task-main">
+                      <div className="all-task-top">
+                        <span className="pill">{getCat(t.category)}</span>
+                        <span className="all-task-title">{t.title}</span>
+                      </div>
+
+                      <div className="all-task-meta">
+                        <span className="all-task-date">{fmtDue(t.dueAt)}</span>
+                        <span className="all-task-status active">Active</span>
+                      </div>
+                    </div>
+
+                    <div className="all-task-actions">
+                      <button
+                        className="task-done-btn"
+                        type="button"
+                        disabled={loading}
+                        onClick={() => markDone(t)}
+                      />
+
+                      <div className="kebab task-kebab">
+                        <button
+                          type="button"
+                          className="kebab-btn"
+                          disabled={loading}
+                          onClick={() =>
+                            setOpenMenu((prev) =>
+                              prev?.scope === "all" && prev.id === t._id
+                                ? null
+                                : { scope: "all", id: t._id }
+                            )
+                          }
+                        >
+                          ⋯
+                        </button>
+
+                        {openMenu?.scope === "all" && openMenu.id === t._id ? (
+                          <div className="kebab-menu">
+                            <button
+                              className="kebab-item"
+                              type="button"
+                              onClick={() => openEditTask(t)}
+                            >
+                              Edit
+                            </button>
+                            <button
+                              className="kebab-item kebab-danger"
+                              type="button"
+                              onClick={() => {
+                                setOpenMenu(null)
+                                removeTask(t._id)
+                              }}
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        ) : null}
+                      </div>
+                    </div>
+                  </li>
+                ))}
+            </ul>
+          ) : (
+            <div className="all-tasks-collapsed" />
+          )}
+
+        </div>
       </div>
 
 
       <div className="main-content">
-        
+
 
         {error && <p className="msg msg--error">{error}</p>}
         {loading && <p className="msg">Loading...</p>}
@@ -436,6 +593,7 @@ export default function TasksPage() {
           {categories.map((cat) => {
             const catItems = items
               .filter((t) => getCat(t.category) === cat)
+              .filter((t) => (t.status || "active") === "active")
               .slice()
               .sort((a, b) => dueMs(a.dueAt) - dueMs(b.dueAt))
 
@@ -506,24 +664,63 @@ export default function TasksPage() {
                         {t.dueAt ? <div className="task-due">{fmtDue(t.dueAt)}</div> : null}
                       </div>
 
-                      <div className="kebab task-kebab">
-                        <button
-                          type="button"
-                          className="kebab-btn"
-                          disabled={loading}
-                          onClick={() => setMenuOpenTaskId((prev) => (prev === t._id ? null : t._id))}
-                        >
-                          ⋯
-                        </button>
+                      <div className="task-actions-right">
+                        {!isSelectMode(cat) ? (
+                          <button
+                            type="button"
+                            className="task-done-btn"
+                            title="Mark as done"
+                            disabled={loading}
+                            onClick={() => markDone(t)}
+                          />
+                        ) : (
+                          <input
+                            type="checkbox"
+                            className="task-check"
+                            checked={Boolean((selectedByCat[cat] || {})[t._id])}
+                            onChange={() => toggleSelectTask(cat, t._id)}
+                            disabled={loading}
+                          />
+                        )}
 
-                        {menuOpenTaskId === t._id ? (
-                          <div className="kebab-menu">
-                            <button type="button" className="kebab-item" onClick={() => openEditTask(t)}>Edit</button>
-                            <button type="button" className="kebab-item kebab-danger" onClick={() => removeTask(t._id)}>Delete</button>
-                          </div>
-                        ) : null}
+                        <div className="kebab task-kebab">
+                          <button
+                            type="button"
+                            className="kebab-btn"
+                            disabled={loading}
+                            onClick={() =>
+                              setOpenMenu((prev) =>
+                                prev?.scope === "board" && prev.cat === cat && prev.id === t._id
+                                  ? null
+                                  : { scope: "board", cat, id: t._id }
+                              )
+                            }
+
+                          >
+                            ⋯
+                          </button>
+
+                          {openMenu?.scope === "board" && openMenu.cat === cat && openMenu.id === t._id ? (
+                            <div className="kebab-menu">
+                              <button className="kebab-item" onClick={() => openEditTask(t)}>
+                                Edit
+                              </button>
+                              <button
+                                className="kebab-item kebab-danger"
+                                type="button"
+                                onClick={() => {
+                                  setOpenMenu(null)
+                                  removeTask(t._id)
+                                }}
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          ) : null}
+                        </div>
                       </div>
                     </li>
+
 
                   ))}
                 </ul>

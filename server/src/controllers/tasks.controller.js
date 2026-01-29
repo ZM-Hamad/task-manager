@@ -1,5 +1,5 @@
 import Task from '../models/Task.js'
-import { validateCreateTask, validateUpdateTask } from '../utils/validate.js'
+import { validateCreateTask, validateUpdateTask, toDateOrNull } from '../utils/validate.js'
 
 const parseIntSafe = (v, fallback) => {
   const n = Number.parseInt(String(v), 10)
@@ -60,7 +60,7 @@ export const createTask = async (req, res, next) => {
       title: req.body.title,
       description: req.body.description || '',
       category: req.body.category || 'General',
-      dueAt: req.body.dueAt ?? null
+      dueAt: toDateOrNull(req.body.dueAt),
     })
 
 
