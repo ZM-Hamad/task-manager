@@ -1,0 +1,29 @@
+.field {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+}
+
+.btn {
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.btn--primary {
+  background: #2563eb;
+  color: white;
+}
+
+.btn--ghost {
+  background: #e5e7eb;
+  color: #111827;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

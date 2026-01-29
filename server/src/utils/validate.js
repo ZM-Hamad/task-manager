@@ -9,6 +9,13 @@ export const isNonEmptyString = (v, min = 1, max = 200) => {
   return s.length >= min && s.length <= max
 }
 
+export const toDateOrNull = (v) => {
+  if (v == null || v === '') return null
+  const d = new Date(v)
+  return Number.isNaN(d.getTime()) ? null : d
+}
+
+
 export const normalizeEmail = (v) => String(v || '').trim().toLowerCase()
 
 export const validateRegister = ({ name, email, password }) => {
@@ -26,19 +33,28 @@ export const validateLogin = ({ email, password }) => {
   return { ok: Object.keys(errors).length === 0, errors }
 }
 
-export const validateCreateTask = ({ title, description, category }) => {
+export const validateCreateTask = ({ title, description, category, dueAt }) => {
   const errors = {}
   if (!isNonEmptyString(title, 1, 120)) errors.title = 'Title is required'
   if (description != null && typeof description !== 'string') errors.description = 'Description must be a string'
   if (category != null && !isNonEmptyString(category, 1, 120)) errors.category = 'Category is required'
+  if (dueAt !== undefined) {
+    const d = toDateOrNull(dueAt)
+    if (d === null) errors.dueAt = 'Invalid due date/time'
+  }
+
   return { ok: Object.keys(errors).length === 0, errors }
 }
 
-export const validateUpdateTask = ({ title, description, status, category }) => {
+export const validateUpdateTask = ({ title, description, status, category, dueAt }) => {
   const errors = {}
   if (title !== undefined && !isNonEmptyString(title, 1, 120)) errors.title = 'Invalid title'
   if (description !== undefined && typeof description !== 'string') errors.description = 'Description must be a string'
   if (status !== undefined && !['active', 'done'].includes(status)) errors.status = 'Invalid status'
   if (category !== undefined && !isNonEmptyString(category, 1, 120)) errors.category = 'Invalid category'
+  if (dueAt !== undefined) {
+    const d = toDateOrNull(dueAt)
+    if (d === null) errors.dueAt = 'Invalid due date/time'
+  }
   return { ok: Object.keys(errors).length === 0, errors }
 }

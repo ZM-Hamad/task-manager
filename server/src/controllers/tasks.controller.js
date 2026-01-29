@@ -59,7 +59,8 @@ export const createTask = async (req, res, next) => {
       ownerId: req.user.userId,
       title: req.body.title,
       description: req.body.description || '',
-      category: req.body.category || 'General'
+      category: req.body.category || 'General',
+      dueAt: req.body.dueAt ?? null
     })
 
 
@@ -78,7 +79,8 @@ export const updateTask = async (req, res, next) => {
     if (req.body.title !== undefined) allowed.title = req.body.title
     if (req.body.description !== undefined) allowed.description = req.body.description
     if (req.body.status !== undefined) allowed.status = req.body.status
-  if (req.body.category !== undefined) allowed.category = req.body.category
+    if (req.body.category !== undefined) allowed.category = req.body.category
+    if (req.body.dueAt !== undefined) allowed.dueAt = req.body.dueAt
 
     const task = await Task.findOneAndUpdate(
       { _id: req.params.id, ownerId: req.user.userId },
