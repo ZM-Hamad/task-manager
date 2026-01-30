@@ -43,3 +43,15 @@
   border-radius: 10px;
   cursor: pointer;
 }
+
+
+
+.nav-link{
+  color: #fff;
+  text-decoration: none;
+  opacity: .85;
+}
+
+.nav-link:hover{
+  opacity: 1;
+}

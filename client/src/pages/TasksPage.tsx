@@ -14,6 +14,7 @@ type Task = {
   category?: string
   dueAt?: string | null
   status?: "active" | "done"
+  archived?: boolean
 }
 
 type TasksResponse = {
@@ -37,7 +38,13 @@ export default function TasksPage() {
   const [items, setItems] = useState<Task[]>([]);
 
   const [newCategory, setNewCategory] = useState("")
-  const [extraCategories, setExtraCategories] = useState<string[]>([])
+  const [extraCategories, setExtraCategories] = useState<string[]>(() => {
+    try { return JSON.parse(localStorage.getItem("categories") || "[]") } catch { return [] }
+  })
+  useEffect(() => {
+    localStorage.setItem("categories", JSON.stringify(extraCategories))
+  }, [extraCategories])
+
 
 
   const [error, setError] = useState("");
@@ -112,6 +119,16 @@ export default function TasksPage() {
         token
       );
       setItems(data.items);
+      setExtraCategories((prev) => {
+        const fromActive = (data.items || [])
+          .filter((t) => (t.status || "active") === "active")
+          .filter((t) => !t.archived)
+          .map((t) => getCat(t.category))
+          .filter(Boolean)
+
+        return Array.from(new Set([...prev, ...fromActive]))
+      })
+
       try {
         const me = await apiGet<{ email?: string }>("/api/auth/me", token)
         setWho(displayNameFromEmail(me?.email || ""))
@@ -129,6 +146,7 @@ export default function TasksPage() {
     const s = String(c || "General").trim()
     return s || "General"
   }
+
 
   function fmtDue(dueAt?: string | null) {
     if (!dueAt) return ""
@@ -264,13 +282,21 @@ export default function TasksPage() {
 
   async function deleteCategory(cat: string) {
     setMenuOpenCat(null)
+
     const catItems = items.filter((t) => getCat(t.category) === cat)
-    if (!confirm(`Delete category "${cat}" and ${catItems.length} tasks?`)) return
+    const activeItems = catItems.filter((t) => (t.status || "active") === "active")
+    const doneItems = catItems.filter((t) => (t.status || "active") === "done")
+
+    if (!confirm(`Delete category "${cat}"?\nActive tasks will be deleted: ${activeItems.length}\nDone tasks will stay in History: ${doneItems.length}`)) return
 
     setError("")
     try {
       setLoading(true)
-      await Promise.all(catItems.map((t) => apiDelete(`/api/tasks/${t._id}`, token)))
+
+      await Promise.all(activeItems.map((t) => apiDelete(`/api/tasks/${t._id}`, token)))
+
+      await Promise.all(doneItems.map((t) => apiPatch(`/api/tasks/${t._id}`, { archived: true }, token)))
+
       setExtraCategories((prev) => prev.filter((c) => c !== cat))
 
       setSelectModeCats((prev) => {
@@ -278,11 +304,13 @@ export default function TasksPage() {
         delete copy[cat]
         return copy
       })
+
       setSelectedByCat((prev) => {
         const copy = { ...prev }
         delete copy[cat]
         return copy
       })
+
       await load()
     } catch (err: any) {
       if (handleMaybeUnauthorized(err)) return
@@ -291,6 +319,7 @@ export default function TasksPage() {
       setLoading(false)
     }
   }
+
 
 
 
@@ -345,6 +374,9 @@ export default function TasksPage() {
     try {
       setLoading(true)
       await apiPatch(`/api/tasks/${t._id}`, { status: "done" }, token)
+      setExtraCategories((prev) =>
+        prev.includes(getCat(t.category)) ? prev : [...prev, getCat(t.category)]
+      )
       await load()
     } catch (err: any) {
       if (handleMaybeUnauthorized(err)) return
@@ -380,6 +412,9 @@ export default function TasksPage() {
     setError("")
     try {
       setLoading(true)
+      setExtraCategories((prev) =>
+        prev.includes(addOpenCat) ? prev : [...prev, addOpenCat]
+      )
       await apiPost(
         "/api/tasks",
         {
@@ -452,14 +487,20 @@ export default function TasksPage() {
   }
 
 
+  const visibleActive = items
+    .filter((t) => (t.status || "active") === "active")
+    .filter((t) => !t.archived)
 
 
-  const derivedCategories = Array.from(new Set(items.map((t) => getCat(t.category))))
-  const categoriesRaw = Array.from(new Set(["General", ...derivedCategories, ...extraCategories]))
+
+
+  const derivedCategories = Array.from(new Set(visibleActive.map((t) => getCat(t.category))))
+  const categoriesRaw = Array.from(new Set([...derivedCategories, ...extraCategories]))
+
 
   const categories = categoriesRaw
     .slice()
-    .sort((a, b) => nearestDueForCat(items, a) - nearestDueForCat(items, b))
+    .sort((a, b) => nearestDueForCat(visibleActive, a) - nearestDueForCat(visibleActive, b))
 
 
   return (
@@ -507,7 +548,7 @@ export default function TasksPage() {
 
           {allOpen ? (
             <ul className="all-tasks-list">
-              {items
+              {visibleActive
                 .filter((t) => (t.status || "active") === "active")
                 .slice()
                 .sort((a, b) => dueMs(a.dueAt) - dueMs(b.dueAt))
@@ -591,7 +632,7 @@ export default function TasksPage() {
 
         <div className="boards">
           {categories.map((cat) => {
-            const catItems = items
+            const catItems = visibleActive
               .filter((t) => getCat(t.category) === cat)
               .filter((t) => (t.status || "active") === "active")
               .slice()

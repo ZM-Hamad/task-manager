@@ -21,38 +21,42 @@ export default function Layout() {
   }
 
   return (
-  <div className="app-shell">
-    <video
-      ref={videoRef}
-      className="bg-video"
-      autoPlay
-      muted
-      playsInline
-      loop
-      preload="auto"
-      src="/bg.mp4"
-    />
-    <div className="bg-overlay" />
+    <div className="app-shell">
+      <video
+        ref={videoRef}
+        className="bg-video"
+        autoPlay
+        muted
+        playsInline
+        loop
+        preload="auto"
+        src="/bg.mp4"
+      />
+      <div className="bg-overlay" />
 
-    <div className="app-content">
-      <nav className="top-nav">
-        {!token ? (
-          <>
-            <Link to="/login">Login</Link>
-            <Link to="/register">Register</Link>
-          </>
-        ) : (
-          <>
-            <button className="nav-btn" type="button" onClick={logout}>
-              Logout
-            </button>
-          </>
-        )}
-      </nav>
+      <div className="app-content">
+        <nav className="top-nav">
+          {!token ? (
+            <>
+              <Link to="/login">Login</Link>
+              <Link to="/register">Register</Link>
+            </>
+          ) : (
+            <>
+              <Link className="nav-link" to="/tasks">Tasks</Link>
+              <Link className="nav-link" to="/history">History</Link>
 
-      <Outlet />
+              <button className="nav-btn" type="button" onClick={logout}>
+                Logout
+              </button>
+            </>
+          )}
+
+        </nav>
+
+        <Outlet />
+      </div>
     </div>
-  </div>
-);
+  );
 
 }

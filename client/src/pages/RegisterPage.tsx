@@ -90,7 +90,7 @@ export default function RegisterPage() {
         </form>
 
         <div className="auth-footer">
-          Already have an account? <span className="auth-link" onClick={() => navigate("/login")}>Login</span>
+          Already have an account? <span className="auth-link" onClick={() => navigate("/Login")}>Login</span>
         </div>
       </div>
     </div>

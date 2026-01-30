@@ -7,6 +7,9 @@ import RegisterPage from "./pages/RegisterPage";
 import TasksPage from "./pages/TasksPage";
 import NotFoundPage from "./pages/NotFoundPage";
 
+
+import HistoryPage from "./pages/HistoryPage"
+
 function HomeRedirect() {
   const token = localStorage.getItem("token");
   return <Navigate to={token ? "/tasks" : "/login"} replace />;
@@ -28,6 +31,7 @@ export default function App() {
           }
         />
         <Route path="*" element={<NotFoundPage />} />
+        <Route path="/history" element={<HistoryPage />} />
       </Route>
     </Routes>
   );
