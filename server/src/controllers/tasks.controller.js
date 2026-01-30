@@ -81,6 +81,8 @@ export const updateTask = async (req, res, next) => {
     if (req.body.status !== undefined) allowed.status = req.body.status
     if (req.body.category !== undefined) allowed.category = req.body.category
     if (req.body.dueAt !== undefined) allowed.dueAt = req.body.dueAt
+    if (req.body.archived !== undefined) allowed.archived = req.body.archived
+    if (req.body.dueAt !== undefined) allowed.dueAt = toDateOrNull(req.body.dueAt)
 
     const task = await Task.findOneAndUpdate(
       { _id: req.params.id, ownerId: req.user.userId },
@@ -108,3 +110,24 @@ export const deleteTask = async (req, res, next) => {
     next(e)
   }
 }
+
+
+
+export const deleteHistory = async (req, res) => {
+  try {
+    const userId = req.user?.userId || req.user?.id || req.user?._id
+    if (!userId) return res.status(401).json({ message: "Unauthorized" })
+
+    const result = await Task.deleteMany({
+      ownerId: userId,
+      status: "done",
+    })
+
+    return res.json({ success: true, deleted: result.deletedCount })
+  } catch (e) {
+    console.error("deleteHistory error:", e)
+    return res.status(500).json({ message: "Failed to clear history" })
+  }
+}
+
+

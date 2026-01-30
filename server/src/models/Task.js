@@ -7,7 +7,8 @@ const taskSchema = new mongoose.Schema(
     description: { type: String, default: '', trim: true, maxlength: 1000 },
     category: { type: String, required: true, trim: true, default: 'General' },
     status: { type: String, enum: ['active', 'done'], default: 'active' },
-    dueAt: { type: Date, default: null }
+    dueAt: { type: Date, default: null },
+    archived: { type: Boolean, default: false },
   },
   { timestamps: true }
 )

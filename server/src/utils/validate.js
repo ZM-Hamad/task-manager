@@ -46,12 +46,14 @@ export const validateCreateTask = ({ title, description, category, dueAt }) => {
   return { ok: Object.keys(errors).length === 0, errors }
 }
 
-export const validateUpdateTask = ({ title, description, status, category, dueAt }) => {
+export const validateUpdateTask = ({ title, description, status, category, dueAt, archived }) => {
   const errors = {}
+  if (archived !== undefined && typeof archived !== "boolean") errors.archived = "Invalid archived flag"
   if (title !== undefined && !isNonEmptyString(title, 1, 120)) errors.title = 'Invalid title'
   if (description !== undefined && typeof description !== 'string') errors.description = 'Description must be a string'
   if (status !== undefined && !['active', 'done'].includes(status)) errors.status = 'Invalid status'
   if (category !== undefined && !isNonEmptyString(category, 1, 120)) errors.category = 'Invalid category'
+  if (archived !== undefined && typeof archived !== 'boolean') errors.archived = 'Invalid archived flag'
   if (dueAt !== undefined) {
     const d = toDateOrNull(dueAt)
     if (d === null) errors.dueAt = 'Invalid due date/time'
